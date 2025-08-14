@@ -22,8 +22,6 @@ async function run() {
     const database = client.db("Expense-tracker");
     const expensesCollection = database.collection("Expense");
 
-
-
     // POST /expenses  Add new expense
     app.post("/expenses", async (req, res) => {
       try {
@@ -56,7 +54,19 @@ async function run() {
       }
     });
 
-
+    // GET all expenses
+    app.get("/expenses", async (req, res) => {
+      try {
+        const expenses = await expensesCollection
+          .find()
+          .sort({ date: -1 })
+          .toArray();
+        res.json(expenses);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch expenses", error });
+      }
+    });
+    
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

@@ -57,9 +57,7 @@ async function run() {
     // GET all expenses
     app.get("/expenses", async (req, res) => {
       try {
-        const expenses = await expensesCollection
-          .find()
-          .toArray();
+        const expenses = await expensesCollection.find().toArray();
         res.json(expenses);
       } catch (error) {
         res.status(500).json({ message: "Failed to fetch expenses", error });
@@ -95,6 +93,26 @@ async function run() {
       }
     });
 
+    // DELETE /expenses/:id  delete an expense
+    app.delete("/expenses/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const result = await expensesCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ error: "Expense not found" });
+        }
+
+        res.json({ message: "Expense deleted successfully" });
+      } catch (err) {
+        console.error(" Error deleting expense:", err);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+    
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

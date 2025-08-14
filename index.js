@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const PORT = 3000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // Middleware to parse JSON
 const app = express();
@@ -59,14 +59,42 @@ async function run() {
       try {
         const expenses = await expensesCollection
           .find()
-          .sort({ date: -1 })
           .toArray();
         res.json(expenses);
       } catch (error) {
         res.status(500).json({ message: "Failed to fetch expenses", error });
       }
     });
-    
+
+    // PATCH API for updating expense
+    app.patch("/expenses/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { title, amount, date, category } = req.body;
+
+        const result = await expensesCollection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              title,
+              amount,
+              date: new Date(date),
+              category,
+            },
+          }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: "Expense not found" });
+        }
+
+        res.json({ message: "Expense updated successfully" });
+      } catch (err) {
+        console.error(" Error updating expense:", err);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

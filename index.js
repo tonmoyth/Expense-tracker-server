@@ -7,7 +7,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 // Middleware to parse JSON
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: ['https://expense-tracker-client-ruddy.vercel.app'] }));
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(process.env.MONGODB_URL, {
@@ -64,6 +64,22 @@ async function run() {
       }
     });
 
+    app.get('/expenses/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const expense = await expensesCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!expense) {
+          return res.status(404).json({ message: 'Expense not found' });
+        }
+
+        res.json(expense);
+      } catch (error) {
+        console.error('Error fetching expense:', error);
+        res.status(500).json({ message: 'Server error' });
+      }
+    });
+
     // PATCH API for updating expense
     app.patch("/expenses/:id", async (req, res) => {
       try {
@@ -112,7 +128,7 @@ async function run() {
         res.status(500).json({ error: "Internal server error" });
       }
     });
-    
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
